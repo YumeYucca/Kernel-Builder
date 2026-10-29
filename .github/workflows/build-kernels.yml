@@ -139,7 +139,6 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ needs.validate-config.outputs.java_version }}
-          cache: gradle
 
       - uses: actions/setup-python@v6
         with:
