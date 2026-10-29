@@ -136,6 +136,23 @@ jobs:
           token: ${{ secrets.TEMPLATE_REPOSITORY_TOKEN || github.token }}
           fetch-depth: 1
 
+      - name: Verify template native toolchain pin
+        env:
+          CONFIGURED_NDK_VERSION: >-
+            ${{ needs.validate-config.outputs.android_ndk_version }}
+        run: |
+          set -eu
+          template_ndk_version="$(awk -F= '$1 == "android.ndkVersion" { print $2 }' app-template/kernel.properties | tail -n1 | tr -d '[:space:]')"
+          if [ -z "$template_ndk_version" ]; then
+            echo "::error::app-template/kernel.properties does not pin android.ndkVersion"
+            exit 1
+          fi
+          if [ "$template_ndk_version" != "$CONFIGURED_NDK_VERSION" ]; then
+            echo "::error::NDK pin drift: .env ANDROID_NDK_VERSION=$CONFIGURED_NDK_VERSION but app-template/kernel.properties android.ndkVersion=$template_ndk_version"
+            exit 1
+          fi
+          echo "NDK pin matches the template: $template_ndk_version"
+
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
